@@ -26,8 +26,7 @@ parts:
   mdns-browser:
     plugin: nil
     source: https://github.com/hrzlgnm/mdns-browser.git
-    # CI rewrites this line to the release tag being packaged; the commit is
-    # pinned separately via source-commit for integrity.
+    # CI rewrites this line to the release tag being packaged.
     source-tag: v1.19.0
     override-pull: |
       craftctl default
@@ -39,22 +38,25 @@ parts:
       craftctl set version="$version"
     override-build: |
       set -eu
-      export RUSTUP_HOME="$CRAFT_PART_BUILD/rustup-home"
-      export CARGO_HOME="$CRAFT_PART_BUILD/cargo-home"
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-          | sh -s -- -y --profile minimal --default-toolchain stable
-      export PATH="$CARGO_HOME/bin:$PATH"
-      rustup target add wasm32-unknown-unknown
+      tag="$(git describe --tags --exact-match)"
 
-      # Version pins mirror the main repository's CI (.github/actions/setup-tauri).
-      cargo install --locked trunk --version 0.21.14 \
-          --no-default-features --features rustls
-      cargo install --locked tauri-cli --version 2.11.4
+      # Same artifact the AUR -bin package ships: the prebuilt,
+      # unbundled Linux binary. Running outside a Tauri bundle layout
+      # keeps upstream's auto-updater self-disabled; snap refresh owns
+      # updates instead.
+      asset="mdns-browser_linux_x64"
+      url="https://github.com/hrzlgnm/mdns-browser/releases/download/${tag}/${asset}"
+      curl -fsSL -o mdns-browser "$url"
 
-      cargo --locked tauri build --no-bundle --no-sign
+      # Verify against the inline sha256 digest GitHub computes for
+      # every release asset.
+      expected="$(curl -fsSL "https://api.github.com/repos/hrzlgnm/mdns-browser/releases/tags/${tag}" \
+          | jq -r --arg asset "$asset" \
+              '.assets[] | select(.name == $asset) | .digest')"
+      expected="${expected#sha256:}"
+      printf '%s  %s\n' "$expected" mdns-browser | sha256sum --check --status
 
-      install -Dm755 target/release/mdns-browser \
-          "$CRAFT_PART_INSTALL/bin/mdns-browser"
+      install -Dm755 mdns-browser "$CRAFT_PART_INSTALL/bin/mdns-browser"
 
       install -d "$CRAFT_PART_INSTALL/meta/gui" \
           "$CRAFT_PART_INSTALL/share/man/man1"
@@ -75,12 +77,7 @@ parts:
       StartupWMClass=mdns-browser
       EOF
     build-packages:
-      - build-essential
+      - ca-certificates
       - curl
-      - file
       - git
-      - libgtk-3-dev
-      - librsvg2-dev
-      - libssl-dev
-      - libwebkit2gtk-4.1-dev
-      - pkg-config
+      - jq

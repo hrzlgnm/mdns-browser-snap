@@ -24,29 +24,24 @@ jobs:
   build:
     name: 🔨 Build snap
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:24.04
     needs:
       - actionlint
     steps:
-      - name: Install snapcraft and tools
-        run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-              ca-certificates curl git jq python3-pip
-          pip install --break-system-packages --root-user-action=ignore \
-              git+https://github.com/canonical/snapcraft
-        shell: bash
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Pin snap source to latest upstream release
         uses: ./.github/actions/pin-upstream-tag
 
+      - name: Setup LXD
+        uses: canonical/setup-lxd@8c6a87bfb56aa48f3fb9b830baa18562d8bfd4ee # v1
+
+      - name: Install snapcraft
+        run: sudo snap install snapcraft --classic
+        shell: bash
+
       - name: Build snap
-        # The job container is the isolation; no managed build instance needed.
-        run: snapcraft --destructive-mode --verbosity=brief
+        run: sudo snapcraft --use-lxd --verbosity=brief
         shell: bash
 
       - name: Upload snap artifact

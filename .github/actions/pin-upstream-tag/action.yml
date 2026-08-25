@@ -18,12 +18,16 @@ runs:
         UPSTREAM_REPO: hrzlgnm/mdns-browser
       run: |
         set -euo pipefail
+        auth=(-H "Authorization: Bearer $GH_TOKEN")
         if [ -z "$INPUT_TAG" ]; then
-            TAG="$(gh api "repos/$UPSTREAM_REPO/releases/latest" --jq .tag_name)"
+            TAG="$(curl -fsSL "${auth[@]}" \
+                "https://api.github.com/repos/$UPSTREAM_REPO/releases/latest" \
+                | python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])')"
         else
             TAG="$INPUT_TAG"
         fi
-        gh api "repos/$UPSTREAM_REPO/git/ref/tags/$TAG" --jq .object.sha > /dev/null
+        curl -fsSL "${auth[@]}" \
+            "https://api.github.com/repos/$UPSTREAM_REPO/git/ref/tags/$TAG" > /dev/null
         sed -i "s|^    source-tag: .*|    source-tag: $TAG|" snap/snapcraft.yaml
         echo "Pinned snap source to $TAG:"
         grep '^    source-tag:' snap/snapcraft.yaml

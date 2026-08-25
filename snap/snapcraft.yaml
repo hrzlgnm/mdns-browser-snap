@@ -1,5 +1,5 @@
-# Copyright 2026 hrzlgnm
-# SPDX-License-Identifier: MIT-0
+# Copyright 2024-2026 hrzlgnm
+# SPDX-License-Identifier: MIT
 
 name: mdns-browser
 base: core24
@@ -11,6 +11,7 @@ description: |
   Browse services advertised via mDNS on your local network.
 grade: stable
 confinement: strict
+license: MIT
 platforms:
   amd64:
 

@@ -35,8 +35,13 @@ sudo snap install ./mdns-browser_*.snap --dangerous
   `SNAPCRAFT_STORE_CREDENTIALS` repository secret:
 
   ```console
-  snapcraft login --with export  # then: snapcraft export-login --snaps=mdns-browser --channels=stable -
+  snapcraft export-login --snaps=mdns-browser --channels=stable login-file
+  gh secret set SNAPCRAFT_STORE_CREDENTIALS < login-file
+  rm login-file
   ```
+
+  Note: snapcraft 9 removed support for exporting to stdout (`-`); always
+  pass a file name.
 
 If publish credentials are absent, CI still builds and smoke tests the snap;
 the publish step is skipped.

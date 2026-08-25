@@ -35,7 +35,7 @@ jobs:
         shell: bash
 
       - name: Build snap
-        run: sg lxd -c "snapcraft --use-lxd --verbosity=info"
+        run: sudo snapcraft --use-lxd --verbosity=info
         shell: bash
 
       - name: Upload snap artifact
@@ -62,12 +62,12 @@ jobs:
       - name: Install and launch check in container
         run: |
           set -euo pipefail
-          sg lxd -c "lxc launch ubuntu:24.04 smoke-test"
-          sg lxd -c "lxc exec smoke-test -- cloud-init status --wait"
-          sg lxd -c "lxc file push *.snap smoke-test/root/mdns-browser.snap"
-          sg lxd -c "lxc exec smoke-test -- snap install --dangerous /root/mdns-browser.snap"
-          sg lxd -c "lxc exec smoke-test -- mdns-browser --help" | grep -i usage
-          sg lxd -c "lxc delete --force smoke-test"
+          sudo lxc launch ubuntu:24.04 smoke-test
+          sudo lxc exec smoke-test -- cloud-init status --wait
+          sudo lxc file push ./*.snap smoke-test/root/mdns-browser.snap
+          sudo lxc exec smoke-test -- snap install --dangerous /root/mdns-browser.snap
+          sudo lxc exec smoke-test -- mdns-browser --help | grep -i usage
+          sudo lxc delete --force smoke-test
         shell: bash
 
   publish:

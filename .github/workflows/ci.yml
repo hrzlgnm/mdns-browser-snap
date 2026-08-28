@@ -33,6 +33,12 @@ jobs:
       - name: Pin snap source to latest upstream release
         uses: ./.github/actions/pin-upstream-tag
 
+      - name: Fetch attestation bundle
+        uses: ./.github/actions/fetch-attestation
+        with:
+          repo: hrzlgnm/mdns-browser
+          asset: mdns-browser_linux_x64
+
       - name: Setup LXD
         uses: canonical/setup-lxd@8c6a87bfb56aa48f3fb9b830baa18562d8bfd4ee # v1
 

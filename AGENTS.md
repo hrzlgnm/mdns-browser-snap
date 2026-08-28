@@ -30,10 +30,6 @@ We verify with `gh attestation verify` using the **offline bundle** flow:
   the host, so at build time it becomes `GH_TOKEN="${GH_TOKEN}"` and fails
   under `set -u` with `GH_TOKEN: unbound variable`. This is why the offline
   bundle approach exists instead.
-- The **project directory is mounted into the LXD container** and is reachable
-  inside the build at `$SNAPCRAFT_PROJECT_DIR`. So files we generate on the
-  host runner (the bundle + `trusted_root.jsonl`) are visible to the build
-  without any env plumbing.
 
 ### Host fetch step (local composite action, used in BOTH workflows)
 
@@ -42,7 +38,10 @@ upstream asset, runs `gh attestation download` + `gh attestation
 trusted-root`, and writes the bundle (`sha256*.jsonl`) and `trusted_root.jsonl`
 into the project dir. It takes `repo`, `asset`, and an optional `tag` (if
 `tag` is empty it reads `source-tag` from `snap/snapcraft.yaml`, which
-`pin-upstream-tag` just set). Both `ci.yml` and `release.yml` call it:
+`pin-upstream-tag` just set). The **project directory is mounted into the LXD
+container** (`$SNAPCRAFT_PROJECT_DIR`), so files we generate on the host runner
+are visible to the build without any env plumbing. Both `ci.yml` and
+`release.yml` call it:
 
 > This is a **per-repo local copy** (duplicated in each snap repo that uses
 > the offline bundle flow). It is intentionally **not** shared via
@@ -77,19 +76,6 @@ bundle="$(ls "$SNAPCRAFT_PROJECT_DIR"/sha256*.jsonl | head -1)"
 - `cert-identity` pin:
   `https://github.com/hrzlgnm/mdns-browser/.github/workflows/desktop-reusable.yml@refs/tags/${tag}`
 
-## Open status: binary attestation validity (still being validated)
-
-Upstream `hrzlgnm/mdns-browser` PR #2536 (attest plain-binary provenance
-before bundle recompile) is **merged** (2026-08-27), and the `v1.20.0` draft
-release should carry a valid **binary** attestation over
-`mdns-browser_linux_x64`. This repo was switched from the old `--source-digest`
-(source) attestation to the offline binary-bundle flow, but **whether the
-verify passes end-to-end is unconfirmed** until the CI build actually runs
-against a release that has the binary attestation. If the verify fails, check
-whether the released version's attestation subject is actually the
-`mdns-browser_linux_x64` binary (not another filename), rather than reverting
-to `--source-digest`.
-
 ## CI structure
 
 - **`ci.yml`** — runs on push to `main` and on PRs. Builds the snap with
@@ -113,3 +99,23 @@ to `--source-digest`.
   --bundle` with an empty gh config proved otherwise. Prefer a quick local
   test over a guess.
 - Keep the host fetch step in sync between `ci.yml` and `release.yml`.
+
+## Sibling repos (same pattern)
+
+The same offline-bundle verification is applied across the snap repos that
+repackage prebuilt upstream binaries. Each now has its own `AGENTS.md`:
+
+- `mdns-tui-browser-snap` — binary attestation over a **versioned tarball**
+  asset, cert pinned to `build-reusable.yml`, no `--source-digest`. Uses
+  `pin-release-version` (emits tag+asset) because the asset name embeds the
+  version.
+- `zux-snap` — binary attestation over `zux_linux_x64`, cert pinned to
+  `release.yml`, no `--source-digest`. Uses `pin-upstream-tag`.
+
+## Shared action
+
+The actual `snapcraft pack` invocation lives in the shared
+`hrzlgnm/actions/.github/actions/build-snap` (referenced as `@v2.7.0` from
+`release.yml`). `v2.7.0` runs `sudo env GH_TOKEN="$GH_TOKEN" snapcraft pack
+--use-lxd`; it does **not** inject a token (not needed with the offline
+bundle approach). `ci.yml` calls `snapcraft pack` directly instead.

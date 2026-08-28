@@ -4,11 +4,16 @@
 name: mdns-browser
 base: core24
 adopt-info: mdns-browser
+title: mDNS-Browser
 summary: Cross-platform mDNS browsing app
 description: |
   A cross platform mDNS browsing app written in Rust using tauri and leptos.
 
   Browse services advertised via mDNS on your local network.
+website: https://github.com/hrzlgnm/mdns-browser
+issues: https://github.com/hrzlgnm/mdns-browser/issues
+source-code: https://github.com/hrzlgnm/mdns-browser
+contact: https://github.com/hrzlgnm
 grade: stable
 confinement: strict
 license: MIT

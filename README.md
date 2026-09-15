@@ -12,7 +12,8 @@ pinned tag. This repository only contains packaging metadata and CI:
 2. Snapcraft clones the upstream repo at that tag only for metadata (icon, man
    page); the binary itself is downloaded from that tag's GitHub release and
    its SLSA build provenance is verified with `gh attestation verify` (offline
-   bundle flow, cert pinned to `desktop-reusable.yml@refs/tags/${tag}`) — not
+    bundle flow, cert pinned to `desktop-reusable.yml@refs/heads/main`
+    (upstream releases via release-please, so builds run on `main`) — not
    an inline `sha256` digest (which a compromised publish step could rewrite).
 
 ## Install

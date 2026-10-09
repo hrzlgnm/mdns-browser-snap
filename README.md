@@ -1,3 +1,5 @@
+[![Release snap](https://github.com/hrzlgnm/mdns-browser-snap/actions/workflows/release.yml/badge.svg)](https://github.com/hrzlgnm/mdns-browser-snap/actions/workflows/release.yml)
+[![mdns-browser](https://snapcraft.io/mdns-browser/badge.svg)](https://snapcraft.io/mdns-browser)
 # mdns-browser snap
 
 Packages [mdns-browser](https://github.com/hrzlgnm/mdns-browser) as a Snap.
